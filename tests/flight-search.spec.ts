@@ -38,3 +38,16 @@ test('User cannot search with the same origin and destination', async ({ page })
   await expect(page.getByTestId('flight-from')).toBeVisible();
   await expect(page.getByTestId('flight-to')).toBeVisible();
 });
+
+test('One-way flight search does not require a return date', async ({ page }) => {
+  await page.goto('https://www.qapractice.com/flight-booking-scenarios');
+
+  await page.getByTestId('flight-from').selectOption('Singapore');
+  await page.getByTestId('flight-to').selectOption('Sydney');
+  await page.getByTestId('flight-departure-date').fill('2026-10-15');
+  await page.getByTestId('flight-one-way').check();
+
+  await page.getByTestId('flight-search').click();
+
+  await expect(page.getByTestId('flight-result-GW100')).toBeVisible();
+});
