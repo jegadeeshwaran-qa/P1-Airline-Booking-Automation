@@ -1,53 +1,68 @@
 import { test, expect } from '@playwright/test';
+import { FlightBookingPage } from '../pages/flight-booking.page';
 
 test('User can search for a one-way flight', async ({ page }) => {
-  await page.goto('https://www.qapractice.com/flight-booking-scenarios');
+  const flightBookingPage = new FlightBookingPage(page);
 
-  await page.getByTestId('flight-from').selectOption('Singapore');
-  await page.getByTestId('flight-to').selectOption('Sydney');
-  await page.getByTestId('flight-departure-date').fill('2026-10-15');
-  await page.getByTestId('flight-one-way').check();
+  await flightBookingPage.open();
 
-  await page.getByTestId('flight-search').click();
+  await flightBookingPage.searchOneWay(
+    'Singapore',
+    'Sydney',
+    '2026-10-15'
+  );
 
-  await expect(page.getByTestId('flight-result-GW100')).toBeVisible();
+  await expect(flightBookingPage.flightResult).toBeVisible();
 });
 
 test('User cannot search without selecting origin and destination', async ({ page }) => {
-  await page.goto('https://www.qapractice.com/flight-booking-scenarios');
+  const flightBookingPage = new FlightBookingPage(page);
 
-  await page.getByTestId('flight-departure-date').fill('2026-10-15');
-  await page.getByTestId('flight-one-way').check();
+  await flightBookingPage.open();
 
-  await page.getByTestId('flight-search').click();
+  await flightBookingPage.searchWithoutOriginAndDestination(
+    '2026-10-15'
+  );
 
-  await expect(page.getByTestId('flight-from')).toBeVisible();
-  await expect(page.getByTestId('flight-to')).toBeVisible();
+  await expect(flightBookingPage.flightResult).not.toBeVisible();
 });
 
 test('User cannot search with the same origin and destination', async ({ page }) => {
-  await page.goto('https://www.qapractice.com/flight-booking-scenarios');
+  const flightBookingPage = new FlightBookingPage(page);
 
-  await page.getByTestId('flight-from').selectOption('Singapore');
-  await page.getByTestId('flight-to').selectOption('Singapore');
-  await page.getByTestId('flight-departure-date').fill('2026-10-15');
-  await page.getByTestId('flight-one-way').check();
+  await flightBookingPage.open();
 
-  await page.getByTestId('flight-search').click();
+  await flightBookingPage.searchWithSameOriginAndDestination(
+    'Singapore',
+    '2026-10-15'
+  );
 
-  await expect(page.getByTestId('flight-from')).toBeVisible();
-  await expect(page.getByTestId('flight-to')).toBeVisible();
+  await expect(flightBookingPage.flightResult).not.toBeVisible();
 });
 
-test('One-way flight search does not require a return date', async ({ page }) => {
-  await page.goto('https://www.qapractice.com/flight-booking-scenarios');
+test('One-way selection hides the return date field', async ({ page }) => {
+  const flightBookingPage = new FlightBookingPage(page);
 
-  await page.getByTestId('flight-from').selectOption('Singapore');
-  await page.getByTestId('flight-to').selectOption('Sydney');
-  await page.getByTestId('flight-departure-date').fill('2026-10-15');
-  await page.getByTestId('flight-one-way').check();
+  await flightBookingPage.open();
 
-  await page.getByTestId('flight-search').click();
+  await expect(flightBookingPage.returnDate).toBeVisible();
 
-  await expect(page.getByTestId('flight-result-GW100')).toBeVisible();
+  await flightBookingPage.oneWay.check();
+
+  await expect(flightBookingPage.returnDate).not.toBeVisible();
+});
+
+test('Flight search displays an available flight result', async ({ page }) => {
+  const flightBookingPage = new FlightBookingPage(page);
+
+  await flightBookingPage.open();
+
+  await flightBookingPage.searchOneWay(
+    'Singapore',
+    'Sydney',
+    '2026-10-15'
+  );
+
+  await expect(flightBookingPage.flightResult).toBeVisible();
+  await expect(flightBookingPage.selectFlightButton).toBeVisible();
 });
